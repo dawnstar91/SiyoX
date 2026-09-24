@@ -14,7 +14,7 @@
 
 // ==================== 验证模式选择 ====================
 // 0: 关闭验证 (免验证模式), 1: EPIC (摇光云), 2: T3 验证, 3: 微验
-#define SIYOX_ACTIVE_VERIFY_TYPE  0
+#define SIYOX_ACTIVE_VERIFY_TYPE  3
 
 // ==================== 客户端展示信息 ====================
 #define SIYOX_CLIENT_NAME        "SiyoX Client"  //客户端名称
@@ -108,12 +108,12 @@ static const char* SIYOX_EPIC_HOSTS[] = {
 
 // ==================== 微验网络验证配置 ====================
 #define SIYOX_WEIYAN_API_HOST    "wy.llua.cn"                // 微验 接口域名
-#define SIYOX_WEIYAN_APP_ID      "your_weiyan_app_id"        // 微验 应用 ID
-#define SIYOX_WEIYAN_APP_KEY     "your_weiyan_app_key"       // 微验 程序密钥
-#define SIYOX_WEIYAN_RC4_KEY     "your_weiyan_rc4_key"       // 微验 RC4 密钥
-#define SIYOX_WEIYAN_API_TOKEN   "your_weiyan_api_token"     // 微验 API 令牌
-#define SIYOX_WEIYAN_LOGIN_CODE  "your_weiyan_login_code"    // 单码登录接口 API调用ID
-#define SIYOX_WEIYAN_NOTICE_CODE "your_weiyan_notice_code"   // 公告接口 API调用ID
-#define SIYOX_WEIYAN_UPDATE_CODE "your_weiyan_update_code"   // 更新接口 API调用ID
+#define SIYOX_WEIYAN_APP_ID      "11563"        // 微验 应用 ID
+#define SIYOX_WEIYAN_APP_KEY     "jc78fa2126624fabc19549911c94fd69"       // 微验 程序密钥
+#define SIYOX_WEIYAN_RC4_KEY     "yf959a1c0fd93d01337"       // 微验 RC4 密钥
+#define SIYOX_WEIYAN_API_TOKEN   "1db7a43df908f90f7b94dfa21bf6bdb2"     // 微验 API 令牌
+#define SIYOX_WEIYAN_LOGIN_CODE  "tn7jhQ292U"    // 单码登录接口 API调用ID
+#define SIYOX_WEIYAN_NOTICE_CODE "SIrwwYywucM"   // 公告接口 API调用ID
+#define SIYOX_WEIYAN_UPDATE_CODE "G8IqwHWQkHk"   // 更新接口 API调用ID
 
 #endif // SIYOX_CONFIG_H
