@@ -17,15 +17,14 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
+import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
-import XiYue.SiyoX.SiyoXConfig;
-
-public class MainHook implements IXposedHookLoadPackage {
+public class MainHook implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 
     private static final String TAG = "SiyoX";
 
@@ -38,11 +37,22 @@ public class MainHook implements IXposedHookLoadPackage {
     // 网易加固壳
     private static final String STUB_APP = "com.netease.android.protect.StubApp";
 
-    // 你的 native 库名(不带 lib 前缀和 .so)
-    private static final String NATIVE_LIB = "siyox";
+    // SO 名字:打包后是 libsiyox_verify.so
+    private static final String NATIVE_LIB = "siyox_verify";
+
+    // 目标包名
+    private static final String[] TARGET_PACKAGES = {
+            "com.netease.x19",
+            "com.ycxbox.mc",
+    };
 
     private boolean isLoaded = false;
     private boolean activityHooked = false;
+
+    @Override
+    public void initZygote(StartupParam startupParam) {
+        XposedBridge.log("[" + TAG + "] initZygote");
+    }
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
@@ -94,7 +104,6 @@ public class MainHook implements IXposedHookLoadPackage {
 
         // =========================================================
         // 3. 兜底:直接尝试用 lpparam.classLoader hook 游戏 Activity
-        //    (有些版本加固壳已加载完,直接能拿到)
         // =========================================================
         try {
             hookGameActivity(lpparam.classLoader, null);
@@ -102,6 +111,7 @@ public class MainHook implements IXposedHookLoadPackage {
 
         // =========================================================
         // 4. 反检测:屏蔽 Class.forName 对我们模块 / LSPatch 的探测
+        //    org.lsposed.* 全部屏蔽(含 manager / lspatch / npatch / onpatch ...)
         // =========================================================
         try {
             XposedHelpers.findAndHookMethod(
@@ -113,10 +123,8 @@ public class MainHook implements IXposedHookLoadPackage {
                             String name = (String) param.args[0];
                             if (name == null) return;
                             if (name.contains(MODULE_PACKAGE)
-                                    || name.contains("org.lsposed.lspatch")
-                                    || name.contains("org.lsposed.npatch")
-                                    || name.contains("org.lsposed.onpatch")
-                                    || name.contains("org.lsposed.opatch")) {
+                                    || name.startsWith("org.lsposed.")
+                                    || name.contains(".org.lsposed.")) {
                                 param.setThrowable(new ClassNotFoundException());
                             }
                         }
@@ -155,10 +163,8 @@ public class MainHook implements IXposedHookLoadPackage {
         // =========================================================
         // 6. 针对网易我的世界进程做额外处理
         // =========================================================
-        if ("com.netease.x19".equals(lpparam.packageName)
-                || "com.ycxbox.mc".equals(lpparam.packageName)) {
+        if (isTargetPackage(lpparam.packageName)) {
 
-            // 检查 libminecraftpe.so 是否在目标 nativeLibraryDir 里
             if (lpparam.appInfo != null
                     && !TextUtils.isEmpty(lpparam.appInfo.nativeLibraryDir)
                     && TextUtils.equals(lpparam.packageName, lpparam.processName)
@@ -182,6 +188,14 @@ public class MainHook implements IXposedHookLoadPackage {
                 } catch (Throwable ignored) {}
             }
         }
+    }
+
+    private boolean isTargetPackage(String pkg) {
+        if (pkg == null) return false;
+        for (String p : TARGET_PACKAGES) {
+            if (p.equals(pkg)) return true;
+        }
+        return false;
     }
 
     // ============================================================
@@ -228,6 +242,7 @@ public class MainHook implements IXposedHookLoadPackage {
             if (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0) {
                 abi = Build.SUPPORTED_ABIS[0];
             }
+            XposedBridge.log("[" + TAG + "] abi=" + abi);
 
             // 2. 目标路径:目标 App 的私有目录
             File outSo = new File(targetCtx.getCacheDir(), "lib" + NATIVE_LIB + ".so");
@@ -241,6 +256,7 @@ public class MainHook implements IXposedHookLoadPackage {
                     return;
                 }
                 String entry = "lib/" + abi + "/lib" + NATIVE_LIB + ".so";
+                XposedBridge.log("[" + TAG + "] extracting entry=" + entry);
                 extractFromApk(moduleApk, entry, outSo);
                 outSo.setReadable(true, false);
                 outSo.setExecutable(true, false);
@@ -338,10 +354,7 @@ public class MainHook implements IXposedHookLoadPackage {
 
     private boolean isSuspiciousPackage(String pkg) {
         if (pkg == null) return false;
-        return pkg.equals(MODULE_PACKAGE)
-                || pkg.equals("org.lsposed.lspatch")
-                || pkg.equals("org.lsposed.npatch")
-                || pkg.equals("org.lsposed.onpatch")
-                || pkg.equals("org.lsposed.opatch");
+        if (pkg.equals(MODULE_PACKAGE)) return true;
+        return pkg.startsWith("org.lsposed.");
     }
-}
+                }
