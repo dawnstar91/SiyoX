@@ -266,7 +266,7 @@ public class MainHook implements IXposedHookLoadPackage {
         try {
             java.lang.reflect.Field f = ClassLoader.class.getDeclaredField("pathList");
             f.setAccessible(true);
-            Object pathList = f.get(HookInit.class.getClassLoader());
+            Object pathList = f.get(MainHook.class.getClassLoader());
             java.lang.reflect.Field de = pathList.getClass().getDeclaredField("dexElements");
             de.setAccessible(true);
             Object[] elements = (Object[]) de.get(pathList);
